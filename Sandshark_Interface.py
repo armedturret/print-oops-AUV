@@ -23,7 +23,7 @@ class SandsharkServer():
     def __init__(self,
                  host="",
                  port=8000,
-                 PACKET_SIZE=1024):
+                 PACKET_SIZE=1024): #PACKET?
 
         self.__host = host
         self.__port = port
@@ -31,11 +31,11 @@ class SandsharkServer():
         
         # bind to port
         self.__sockt = socket.socket(socket.AF_INET,
-                                     socket.SOCK_STREAM)
+                                     socket.SOCK_STREAM) #socket is a wire
         self.__sockt.bind((host, port))
         self.__sockt.listen(5)
-        self.__outgoing = queue.Queue(maxsize=10)
-        self.__incoming = queue.Queue(maxsize=50)
+        self.__outgoing = queue.Queue(maxsize=10) #for outgoing msgs, max = 10
+        self.__incoming = queue.Queue(maxsize=50) #for incoming msgs, max = 50
         
     def run(self):
         try:
@@ -93,7 +93,7 @@ class SandsharkServer():
     def cleanup(self):
         self.__sockt.close()
             
-    def __listener_thread(self, client):
+    def __listener_thread(self, client): #thread for listening
         done = False
         msg_list = list()
         while not done:
