@@ -49,11 +49,11 @@ class FrontSeat():
                 self.__server.send_command(msg)
                 self.__current_time = now
                 
-                msgs = self.__server.receive_mail()
+                msgs = self.__server.receive_mail() #receive messages
                 if len(msgs) > 0:
                     print("\nReceived from backseat:")
                     for msg in msgs:
-                        self.parse_payload_command(str(msg, 'utf-8'))
+                        self.parse_payload_command(str(msg, 'utf-8')) #to adjust speed or heading
                         print(f"{str(msg, 'utf-8')}")
                 
                 time.sleep(1/self.__warp)
@@ -84,7 +84,7 @@ class FrontSeat():
                 if speed_mode == 0:
                     RPM = int(vals[5])
                     print(f"SETTING THRUSTER TO {RPM} RPM")
-                    self.__vehicle.set_rpm(RPM)
+                    self.__vehicle.set_rpm(RPM) #set the speed
                 elif speed_mode == 1:
                     # speed_request
                     print("SORRY, RPM SPEED REQUESTS ONLY! I HAVE NO GPS!")
