@@ -14,6 +14,7 @@ import threading
 import datetime
 
 from AUV_Controller import AUVController
+from Logger import Logger
 
 from pynmea2 import pynmea2
 import BluefinMessages
@@ -29,6 +30,7 @@ class BackSeat():
         self.__start_time = self.__current_time
         self.__warp = warp
         
+        self.__logger = Logger()
         self.__autonomy = AUVController()
     
     def run(self):
@@ -49,9 +51,6 @@ class BackSeat():
 
                 self.send_status()
                 self.__current_time += delta_time
-                
-                
-
                 
                 msgs = self.get_mail()
                 if len(msgs) > 0:
