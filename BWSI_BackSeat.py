@@ -20,7 +20,7 @@ from pynmea2 import pynmea2
 import BluefinMessages
 from Sandshark_Interface import SandsharkClient
 
-class BackSeat(): #EXCALIBUR - IGNORE THIS, THIS IS A TEST
+class BackSeat(): #V 2.0.02.3.3
     # we assign the mission parameters on init
     def __init__(self, host='localhost', port=8000, warp=1):
         
