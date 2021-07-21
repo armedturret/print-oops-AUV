@@ -30,7 +30,7 @@ class BackSeat():
         self.__start_time = self.__current_time
         self.__warp = warp
         
-        self.__logger = Logger()
+        self.__logger = Logger() #######
         self.__autonomy = AUVController()
     
     def run(self):
