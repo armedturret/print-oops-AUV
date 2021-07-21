@@ -30,9 +30,8 @@ class BackSeat():
         self.__start_time = self.__current_time
         self.__warp = warp
         
-        self.__logger = Logger()
+        self.__logger = Logger() #######
         self.__autonomy = AUVController()
-        #self.__logger = Logger()
     
     def run(self):
         try:
@@ -60,16 +59,8 @@ class BackSeat():
                         print(f"{str(msg, 'utf-8')}")
                 time.sleep(1/self.__warp)
 
-                cmd = self.__autonomy.decide()
-
-                #PARSING NAUTICAL-ISH COMMAND
-
-                if not cmd: #parse
-                    degrees = cmd.split(" ")[1]
-                else:
-                    degrees = 0.0
-
-                self.__logger.log_event("turn command",cmd)
+                ### self.__autonomy.decide() probably goes here!
+                
                 ### turn your output message into a BPRMB request! 
                 
                 # ------------------------------------------------------------ #
@@ -101,10 +92,11 @@ class BackSeat():
                     msg = f"${cmd}*{hex(BluefinMessages.checksum(cmd))[2:]}"
                     self.send_message(msg)
                     turned = True
-
+                    
                 # ------------------------------------------------------------ #
                 # ----End of example code
                 # ------------------------------------------------------------ #
+                
                 
         except:
             self.__client.cleanup()
@@ -115,10 +107,7 @@ class BackSeat():
         # DEAL WITH INCOMING BFNVG MESSAGES AND USE THEM TO UPDATE THE
         # STATE IN THE CONTROLLER!
         
-        timestamp = msg('timestamp')
-        latitude = msg('latitude')
-
-        #self.__autonomy.update_state()
+        ### self.__autonomy.update_state() probably goes here!
         pass
         
     def send_message(self, msg):
