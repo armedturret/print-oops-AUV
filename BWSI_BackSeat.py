@@ -20,7 +20,7 @@ from pynmea2 import pynmea2
 import BluefinMessages
 from Sandshark_Interface import SandsharkClient
 
-class BackSeat():
+class BackSeat(): #Trial 4
     # we assign the mission parameters on init
     def __init__(self, host='localhost', port=8000, warp=1):
         
@@ -32,6 +32,7 @@ class BackSeat():
         
         self.__logger = Logger()
         self.__autonomy = AUVController()
+        #self.__logger = Logger()
     
     def run(self):
         try:
@@ -54,7 +55,7 @@ class BackSeat():
                     for msg in msgs:
                         self.process_message(msg)
                 time.sleep(1/self.__warp)
-
+                
                 ### self.__autonomy.decide() probably goes here!
                 command_str = self.__autonomy.decide()
 
@@ -73,7 +74,6 @@ class BackSeat():
                             cmd = BluefinMessages.BPRMB(hhmmss, speed=args[1], speed_mode=0)
                             self.send_message(cmd)
                         
-
         except:
             self.__client.cleanup()
             client.join()
@@ -83,8 +83,6 @@ class BackSeat():
         # DEAL WITH INCOMING BFNVG MESSAGES AND USE THEM TO UPDATE THE
         # STATE IN THE CONTROLLER!
         self.__logger.log_event("RECIEVED", msg)
-
-        ### self.__autonomy.update_state() probably goes here!
         
     def send_message(self, msg):
         self.__logger.log_event("SENT", msg)
