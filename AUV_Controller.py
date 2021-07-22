@@ -9,7 +9,7 @@ import sys
 import numpy as np
 import math
 
-class AUVController():
+class AUVController(): #Test 43
     def __init__(self, auv_state):
         
         # initialize state information
@@ -144,6 +144,7 @@ class AUVController():
                 self.__searching = False #no longer searching for a buoy
                 self.__iterations = 0 #reset the search iterations
         '''
+
         # heading to center of the next buoy pair        
         tgt_hdg = np.mod(self.__heading + relative_angle + 360,360)
         
