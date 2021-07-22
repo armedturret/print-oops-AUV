@@ -20,7 +20,7 @@ from pynmea2 import pynmea2
 import BluefinMessages
 from Sandshark_Interface import SandsharkClient
 
-class BackSeat(): #Trial 4
+class BackSeat():
     # we assign the mission parameters on init
     def __init__(self, host='localhost', port=8000, warp=1):
         
@@ -32,7 +32,6 @@ class BackSeat(): #Trial 4
         
         self.__logger = Logger()
         self.__autonomy = AUVController()
-        #self.__logger = Logger()
     
     def run(self):
         try:
@@ -55,7 +54,7 @@ class BackSeat(): #Trial 4
                     for msg in msgs:
                         self.process_message(msg)
                 time.sleep(1/self.__warp)
-                
+
                 ### self.__autonomy.decide() probably goes here!
                 command_str = self.__autonomy.decide()
 
@@ -68,10 +67,10 @@ class BackSeat(): #Trial 4
                         hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
                         #check if a turn or thrust command
                         if args[0] == "turn" and len(args) == 2:
-                            cmd = BluefinMessages.BPRMB(hhmmss, heading=args[1], horiz_mode=1)
+                            cmd = BluefinMessages.BPRMB(hhmmss, heading=float(args[1]), horiz_mode=1)
                             self.send_message(cmd)
                         elif args[1] == "thruster" and len(args) == 2:
-                            cmd = BluefinMessages.BPRMB(hhmmss, speed=args[1], speed_mode=0)
+                            cmd = BluefinMessages.BPRMB(hhmmss, speed=float(args[1]), speed_mode=0)
                             self.send_message(cmd)
                         
         except:
