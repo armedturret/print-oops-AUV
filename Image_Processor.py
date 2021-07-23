@@ -44,7 +44,9 @@ class ImageProcessor():
         img_thresh_val = np.logical_and( imhsv[:,:,2] > 210, imhsv[:,:,2] < 250) 
         img_thresh_HSV = np.logical_and(img_thresh_hue, img_thresh_sat, img_thresh_val)
 
-        centers = np.argwhere(img_thresh_HSV > 50)
+        object_detection_surface = cv2.boxFilter(img_thresh_HSV.astype(int), -1, (50,50), normalize=False)
+
+        centers = np.argwhere(object_detection_surface > 50)
         center = np.mean(centers, axis=0) if centers.shape[0] > 0 else np.array([])
         
         return center
@@ -57,8 +59,9 @@ class ImageProcessor():
         img_thresh_sat = np.logical_and( imhsv[:,:,1] > 90, imhsv[:,:,1] < 130)
         img_thresh_val = np.logical_and( imhsv[:,:,2] > 220, imhsv[:,:,2] < 250)
         img_thresh_HSV = np.logical_and(img_thresh_hue, img_thresh_sat, img_thresh_val)
+        object_detection_surface = cv2.boxFilter(img_thresh_HSV.astype(int), -1, (50,50), normalize=False)
 
-        centers = np.argwhere(img_thresh_HSV > 50)
+        centers = np.argwhere(object_detection_surface > 50)
         center = np.mean(centers, axis=0) if centers.shape[0] > 0 else np.array([])
         
         return center
@@ -85,12 +88,15 @@ class ImageProcessor():
         if green_center.any():
             green_x = green_center[0]
             green_pos_x = self.__sensor_position(green_x, img_x)
-            green_horiz = list(self.__sensor_angles(green_pos_x))
+            #green_horiz = list(__sensor_angles(green_pos_x))
+            g_sa = self.__sensor_angles(green_pos_x)
+            green_horiz.append(g_sa)
         if red_center.any():
             red_x = red_center[0]
             red_pos_x = self.__sensor_position(red_x, img_x)
-            red_horiz = list(self.__sensor_angles(red_pos_x))
-        return (green_horiz, red_horiz)
+            r_sa = self.__sensor_angles(red_pos_x)
+            red_horiz.append(r_sa)
+        return (green_horiz, red_horiz) 
     
     # ------------------------------------------------------------------------ #
     # Run an iteration of the image processor. 
