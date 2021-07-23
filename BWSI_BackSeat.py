@@ -92,7 +92,7 @@ class BackSeat():
                         # This is the timestamp format from NMEA: hhmmss.ss
                         hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
                         #check if a turn or thrust command
-                        if args[0] == "turn" and len(args) == 2:
+                        if args[0] == "TURN" and len(args) == 2:
                             cmd = BluefinMessages.BPRMB(hhmmss, heading=float(args[1]), horiz_mode=1)
                             self.send_message(cmd)
                         elif args[1] == "thruster" and len(args) == 2:
