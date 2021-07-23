@@ -85,11 +85,11 @@ class ImageProcessor():
         if green_center.any():
             green_x = green_center[0]
             green_pos_x = self.__sensor_position(green_x, img_x)
-            green_horiz = self.__sensor_angles(green_pos_x)
+            green_horiz = list(self.__sensor_angles(green_pos_x))
         if red_center.any():
             red_x = red_center[0]
             red_pos_x = self.__sensor_position(red_x, img_x)
-            red_horiz = self.__sensor_angles(red_pos_x)
+            red_horiz = list(self.__sensor_angles(red_pos_x))
         return (green_horiz, red_horiz)
     
     # ------------------------------------------------------------------------ #

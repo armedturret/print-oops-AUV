@@ -81,6 +81,10 @@ class BackSeat():
                 ### green, red = self.__detect_buoys(img)
                 red, green = self.__buoy_detector.run(self.__auv_state)
                 ### ---------------------------------------------------------- #
+                if len(red) > 0:
+                    self.__logger.log_event("RED",red[0])
+                if len(green) > 0:
+                    self.__logger.log_event("GREEN",green[0])
                 
                 command_str = self.__autonomy.decide(self.__auv_state, green, red, sensor_type='ANGLE').lower()
 
@@ -96,7 +100,7 @@ class BackSeat():
                             cmd = BluefinMessages.BPRMB(hhmmss, heading=float(args[1]), horiz_mode=1)
                             self.send_message(cmd)
                         elif len(args) == 2 and args[0] == "thruster":
-                            cmd = BluefinMessages.BPRMB(hhmmss, speed=float(args[1]), speed_mode=0)
+                            cmd = BluefinMessages.BPRMB(hhmmss, speed=int(args[1]), speed_mode=0)
                             self.send_message(cmd)
 
                 
