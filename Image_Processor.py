@@ -10,7 +10,7 @@ Created on Thu Jul 22 11:30:37 2021
 import sys
 import pathlib
 import datetime
-
+import numpy as np # numerical functions
 import cv2
 
 # For simulations
