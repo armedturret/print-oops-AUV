@@ -84,7 +84,7 @@ class AUVController():
             #as the AUV is moving, the buoys whose angles change more rapidly are closer
             #the pair of buoys also should have a similar changes in angle
             #relative_angle = self.__isolate_buoys(gnext,rnext)  
-        
+
         if len(gnext) > 0 and len(rnext) > 0:
             relative_angle = (gnext[0] + rnext[0]) / 2.0
             #self.__on_first_iteration = 0
@@ -135,8 +135,11 @@ class AUVController():
                 self.__iterations = 0 #reset the search iterations
         '''
 
-        # heading to center of the next buoy pair        
-        tgt_hdg = np.mod(self.__heading + relative_angle + 360,360)
+        # heading to center of the next buoy pair
+        if self.__heading is not None:
+            tgt_hdg = np.mod(self.__heading + relative_angle + 360,360)
+        else:
+            tgt_hdg = np.mod(relative_angle + 360,360)
         
         return tgt_hdg
 
@@ -147,7 +150,10 @@ class AUVController():
         max_angle = 25.0
         
         # determine the angle between current and desired heading
-        delta_angle = self.__desired_heading - self.__heading
+        if self.__heading is not None:
+            delta_angle = self.__desired_heading - self.__heading
+        else:
+            delta_angle = self.__desired_heading
         if delta_angle > 180: # angle too big, go the other way!
             delta_angle = delta_angle - 360
         if delta_angle < -180: # angle too big, go the other way!

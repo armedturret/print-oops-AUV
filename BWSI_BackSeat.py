@@ -49,7 +49,7 @@ class BackSeat():
         
         # set to PICAM for the real camera
         self.__buoy_detector = ImageProcessor(camera='SIM')
-        self.__logger = Logger()
+        self.__logger = Logger(True)
         self.__autonomy = AUVController()
     
     def run(self):
@@ -102,7 +102,8 @@ class BackSeat():
                 
                 time.sleep(1/self.__warp)
                         
-        except:
+        except Exception as e:
+            print(e)
             self.__client.cleanup()
             client.join()
           
@@ -110,6 +111,7 @@ class BackSeat():
     def process_message(self, msg):
         # DEAL WITH INCOMING BFNVG MESSAGES AND USE THEM TO UPDATE THE
         # STATE IN THE CONTROLLER!
+        msg = msg.decode("utf-8")
         self.__logger.log_event("RECIEVED", msg)
 
         fields = msg.split(',')
