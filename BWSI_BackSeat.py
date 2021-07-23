@@ -82,7 +82,7 @@ class BackSeat():
                 red, green = self.__buoy_detector.run(self.__auv_state)
                 ### ---------------------------------------------------------- #
                 
-                command_str = self.__autonomy.decide(self.__auv_state, green, red, sensor_type='ANGLE')
+                command_str = self.__autonomy.decide(self.__auv_state, green, red, sensor_type='ANGLE').lower()
 
                 ### turn your output message into a BPRMB request! 
                 if command_str != "":
@@ -92,10 +92,10 @@ class BackSeat():
                         # This is the timestamp format from NMEA: hhmmss.ss
                         hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
                         #check if a turn or thrust command
-                        if args[0] == "TURN" and len(args) == 2:
+                        if len(args) == 2 and args[0] == "turn":
                             cmd = BluefinMessages.BPRMB(hhmmss, heading=float(args[1]), horiz_mode=1)
                             self.send_message(cmd)
-                        elif args[1] == "thruster" and len(args) == 2:
+                        elif len(args) == 2 and args[0] == "thruster":
                             cmd = BluefinMessages.BPRMB(hhmmss, speed=float(args[1]), speed_mode=0)
                             self.send_message(cmd)
 

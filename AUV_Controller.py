@@ -14,14 +14,13 @@ class AUVController():
         
         # initialize state information
         self.__heading = None
-        self.__speed = None
+        self.__speed = 1000
         self.__rudder = None
         self.__position = None
         self__auv_state = None
         
         # assume we want to be going the direction we're going for now
         self.__desired_heading = None
-        self.__speed = None
 
         self.__green_buoys = None
         self.__red_buoys = None
@@ -165,16 +164,16 @@ class AUVController():
             degrees = math.ceil(delta_angle)
             if degrees > max_angle:
                 degrees = max_angle
-            cmd = "TURN " + str(degrees)
+            cmd = "turn " + str(degrees)
         elif delta_angle<-2: # need to turn to left!
             degrees = math.ceil(delta_angle)
             if degrees < -max_angle:
                 degrees = -max_angle
-            cmd = "TURN " + str(degrees)
+            cmd = "turn " + str(degrees)
         else: #close enough!
             cmd = ""
         
-        return cmd
+        return cmd + ";thruster " + str(self.__speed)
 
     def __distance(self, x1, y1, x2, y2):
         return math.sqrt( (x2 - x1)**2 + (y2 - y1)**2 )
