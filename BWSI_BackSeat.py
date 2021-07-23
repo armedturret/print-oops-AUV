@@ -20,7 +20,7 @@ from pynmea2 import pynmea2
 import BluefinMessages
 from Sandshark_Interface import SandsharkClient
 
-class BackSeat(): #Trial 4
+class BackSeat():
     # we assign the mission parameters on init
     def __init__(self, host='localhost', port=8000, warp=1):
         
@@ -32,7 +32,6 @@ class BackSeat(): #Trial 4
         
         self.__logger = Logger()
         self.__autonomy = AUVController()
-        #self.__logger = Logger()
     
     def run(self):
         try:
@@ -43,9 +42,6 @@ class BackSeat(): #Trial 4
             msg = BluefinMessages.BPLOG('ALL', 'ON')
             self.send_message(msg)
             
-            ### These flags are for the test code. Remove them after the initial test!
-            engine_started = False
-            turned = False
             while True:
                 now = time.time()
                 delta_time = (now-self.__current_time) * self.__warp
@@ -55,57 +51,28 @@ class BackSeat(): #Trial 4
                 
                 msgs = self.get_mail()
                 if len(msgs) > 0:
-                    print("\nReceived from Frontseat:")
                     for msg in msgs:
-                        print(f"{str(msg, 'utf-8')}")
+                        self.process_message(msg)
                 time.sleep(1/self.__warp)
 
-                cmd = self.__autonomy.decide()
+                ### self.__autonomy.decide() probably goes here!
+                command_str = self.__autonomy.decide()
 
-                #PARSING NAUTICAL-ISH COMMAND
-
-                if not cmd: #parse
-                    degrees = cmd.split(" ")[1]
-                else:
-                    degrees = 0.0
-
-                self.__logger.log_event("turn command",cmd)
                 ### turn your output message into a BPRMB request! 
-                
-                # ------------------------------------------------------------ #
-                # ----This is example code to show commands being issued
-                # ------------------------------------------------------------ #
-                print(f"{self.__current_time - self.__start_time}")
-                if not engine_started and (self.__current_time - self.__start_time) > 30:
-                    ## We want to change the speed. For now we will always use the RPM (1500 Max)
-                    self.__current_time = time.time()
-                    # This is the timestamp format from NMEA: hhmmss.ss
-                    hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
-
-                    cmd = f"BPRMB,{hhmmss},,,,750,0,1"
-                    # NMEA requires a checksum on all the characters between the $ and the *
-                    # you can use the BluefinMessages.checksum() function to calculate
-                    # and write it like below. The checksum goes after the *
-                    msg = f"${cmd}*{hex(BluefinMessages.checksum(cmd))[2:]}"
-                    self.send_message(msg)
-                    engine_started = True
-
-                if not turned and (self.__current_time - self.__start_time) > 60:
-                    ## We want to set the rudder position, use degrees plus or minus
-                    ## This command is how much to /change/ the rudder position, not to 
-                    ## set the rudder
-                    self.__current_time = time.time()
-                    hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
-
-                    cmd = f"BPRMB,{hhmmss},15,,,750,0,1"
-                    msg = f"${cmd}*{hex(BluefinMessages.checksum(cmd))[2:]}"
-                    self.send_message(msg)
-                    turned = True
-
-                # ------------------------------------------------------------ #
-                # ----End of example code
-                # ------------------------------------------------------------ #
-                
+                if command_str != "":
+                    for command in command_str.split(';'):
+                        args = command.split(' ')
+                        self.__current_time = time.time()
+                        # This is the timestamp format from NMEA: hhmmss.ss
+                        hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
+                        #check if a turn or thrust command
+                        if args[0] == "turn" and len(args) == 2:
+                            cmd = BluefinMessages.BPRMB(hhmmss, heading=float(args[1]), horiz_mode=1)
+                            self.send_message(cmd)
+                        elif args[1] == "thruster" and len(args) == 2:
+                            cmd = BluefinMessages.BPRMB(hhmmss, speed=float(args[1]), speed_mode=0)
+                            self.send_message(cmd)
+                        
         except:
             self.__client.cleanup()
             client.join()
@@ -114,15 +81,10 @@ class BackSeat(): #Trial 4
     def process_message(self, msg):
         # DEAL WITH INCOMING BFNVG MESSAGES AND USE THEM TO UPDATE THE
         # STATE IN THE CONTROLLER!
-        
-        timestamp = msg('timestamp')
-        latitude = msg('latitude')
-
-        #self.__autonomy.update_state()
-        pass
+        self.__logger.log_event("RECIEVED", msg)
         
     def send_message(self, msg):
-        print(f"sending message {msg}...")
+        self.__logger.log_event("SENT", msg)
         self.__client.send_message(msg)    
         
     def send_status(self):
