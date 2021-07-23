@@ -79,10 +79,10 @@ class BackSeat():
                 ###
                 ### Here you process the image and return the angles to target
                 ### green, red = self.__detect_buoys(img)
-                self.__buoy_detector.run(self.__auv_state)
+                red, green = self.__buoy_detector.run(self.__auv_state)
                 ### ---------------------------------------------------------- #
                 
-                command_str = self.__autonomy.decide()
+                command_str = self.__autonomy.decide(self.__auv_state, green, red, sensor_type='ANGLE')
 
                 ### turn your output message into a BPRMB request! 
                 if command_str != "":
