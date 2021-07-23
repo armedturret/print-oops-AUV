@@ -10,7 +10,7 @@ Created on Thu Jul 22 11:30:37 2021
 import sys
 import pathlib
 import datetime
-
+import numpy as np # numerical functions
 import cv2
 
 # For simulations
@@ -76,10 +76,12 @@ class ImageProcessor():
         
         return horizontal_angle
 
-    def __bouy_angles(self, img):
+    def __buoy_angles(self, img):
         green_center, green_processed = self.__detect_green_buoy(img)
         red_center, red_processed = self.__detect_red_buoy(img)
         img_x, img_y = img.shape
+        green_horiz = None
+        red_horiz = None
         if green_center.any():
             green_x = green_center[0]
             green_pos_x = self.__sensor_position(green_x, img_x)
@@ -124,6 +126,6 @@ class ImageProcessor():
             fn = self.__image_dir / f"frame_{int(datetime.datetime.utcnow().timestamp())}.jpg"
             cv2.imwrite(str(fn), image)
         
-            green, red = self.__bouy_angles(image)
+            green, red = self.__buoy_angles(image)
         
         return red, green
