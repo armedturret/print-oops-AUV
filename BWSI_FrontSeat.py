@@ -27,10 +27,10 @@ class FrontSeat():
     def __init__(self, port=8000, warp=1):
         # start up the vehicle, in setpoint mode
         self.__datum = (42.3, -71.1)
-        self.__vehicle = Sandshark(latlon=(42.3, -71.1),
+        self.__vehicle = Sandshark(latlon=self.__datum,
                                    depth=1.0, 
                                    speed_knots=0.0,
-                                   heading=120.0,
+                                   heading=45.0,
                                    rudder_position=0.0,
                                    engine_speed='STOP',
                                    engine_direction='AHEAD',
@@ -61,12 +61,12 @@ class FrontSeat():
                 
                 self.__simField = BuoyField(self.__datum)
 
-                config = {'nGates': 50,
-                          'gate_spacing': 20,
+                config = {'nGates': 5,
+                          'gate_spacing': 5,
                           'gate_width': 2,
-                          'style': 'linear',
+                          'style': 'pool_1',
                           'max_offset': 5,
-                          'heading': 120}
+                          'heading': 45}
                     
                 self.__simField.configure(config)
                 G, R = self.__simField.get_buoy_positions()
@@ -116,12 +116,16 @@ class FrontSeat():
             
     def parse_payload_command(self, msg):
         # the only one I care about for now is BPRMB
-        vals = msg.split(',')
+        print(f"Parsing {msg}")
+        payld = msg.split('*')
+        vals = payld[0].split(',')
         if vals[0] == '$BPRMB':
+            print("Here!")
                 
             # heading / rudder request
             if vals[2] != '':
-                heading_mode = int(vals[7][:-3])
+                print("Here?")
+                heading_mode = int(vals[7])
                 if heading_mode == 0:
                     # this is a heading request!
                     print("SORRY, I DO NOT ACCEPT HEADING REQUESTS! I ONLY HAVE CAMERA SENSOR!")
@@ -146,7 +150,7 @@ def main():
     if len(sys.argv) > 1:
         port = sys.argv[1]
     else:
-        port = 8042
+        port = 29500
         
     print(f"port = {port}")
         
