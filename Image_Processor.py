@@ -49,6 +49,7 @@ class ImageProcessor():
         centers = np.argwhere(object_detection_surface > 50)
         center = np.mean(centers, axis=0) if centers.shape[0] > 0 else np.array([])
         
+        print("Green Centre " + str(center))
         return center
 
     def __detect_red_buoy(self, img):
@@ -64,6 +65,7 @@ class ImageProcessor():
         centers = np.argwhere(object_detection_surface > 50)
         center = np.mean(centers, axis=0) if centers.shape[0] > 0 else np.array([])
         
+        print("Red Center " + str(center))
         return center
 
     def __sensor_position(pix_x, res_x): 
@@ -133,5 +135,8 @@ class ImageProcessor():
             cv2.imwrite(str(fn), image)
         
             green, red = self.__buoy_angles(image)
+
+            print("Green Angle: " + str(green))
+            print("Red Angle: " + str(red))
         
         return red, green
