@@ -14,6 +14,7 @@ import datetime
 
 import time 
 import numpy as np
+import matplotlib.pyplot as plt
 #import picamera 
 #import picamera.array
 
@@ -55,7 +56,7 @@ class ImageProcessor():
 
         centers = np.argwhere(img_thresh_HSV > 50)
         center = np.mean(centers, axis=0) if centers.shape[0] > 0 else np.array([])
-        
+
         return center
 
     def __detect_red_buoy(self, img):
