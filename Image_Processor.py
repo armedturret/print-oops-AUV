@@ -55,9 +55,9 @@ class ImageProcessor():
         img = cv2.resize(img, (640, 480))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         imhsv = cv2.boxFilter(img, -1, (10,10))
-        img_thresh_hue = np.logical_and( imhsv[:,:,0] > 110, imhsv[:,:,0] < 170)
-        img_thresh_sat = np.logical_and( imhsv[:,:,1] > 90, imhsv[:,:,1] < 130)
-        img_thresh_val = np.logical_and( imhsv[:,:,2] > 220, imhsv[:,:,2] < 250)
+        img_thresh_hue = np.logical_and( imhsv[:,:,0] > 100, imhsv[:,:,0] < 150)
+        img_thresh_sat = np.logical_and( imhsv[:,:,1] > 60, imhsv[:,:,1] < 120)
+        img_thresh_val = np.logical_and( imhsv[:,:,2] > 200, imhsv[:,:,2] < 240)
         img_thresh_HSV = np.logical_and(img_thresh_hue, img_thresh_sat, img_thresh_val)
         object_detection_surface = cv2.boxFilter(img_thresh_HSV.astype(int), -1, (50,50), normalize=False)
 
