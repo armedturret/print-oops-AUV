@@ -13,10 +13,12 @@ import time
 import threading
 import time
 import datetime
+import traceback
 
 import utm
 
 from Image_Processor import ImageProcessor
+from Logger import Logger
 from AUV_Controller import AUVController
 
 from pynmea2 import pynmea2
@@ -121,8 +123,8 @@ class BackSeat():
                             self.send_message(cmd)
 
                 time.sleep(1/self.__warp)
-        except Exception as e:
-            print(e)
+        except:
+            traceback.print_exc()
             self.__client.cleanup()
             client.join()
           
