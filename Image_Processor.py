@@ -77,19 +77,19 @@ class ImageProcessor():
         return horizontal_angle
 
     def __buoy_angles(self, img):
-        green_center, green_processed = self.__detect_green_buoy(img)
-        red_center, red_processed = self.__detect_red_buoy(img)
-        img_x, img_y = img.shape
-        green_horiz = None
-        red_horiz = None
+        green_center = self.__detect_green_buoy(img)
+        red_center = self.__detect_red_buoy(img)
+        img_x = img.shape[1]
+        green_horiz = list()
+        red_horiz = list()
         if green_center.any():
             green_x = green_center[0]
             green_pos_x = self.__sensor_position(green_x, img_x)
-            green_horiz = self.__sensor_angles(green_pos_x)
+            green_horiz = list(self.__sensor_angles(green_pos_x))
         if red_center.any():
             red_x = red_center[0]
             red_pos_x = self.__sensor_position(red_x, img_x)
-            red_horiz = self.__sensor_angles(red_pos_x)
+            red_horiz = list(self.__sensor_angles(red_pos_x))
         return (green_horiz, red_horiz)
     
     # ------------------------------------------------------------------------ #
@@ -98,8 +98,8 @@ class ImageProcessor():
     # the PICAM does not need any auv_state input
     # ------------------------------------------------------------------------ #
     def run(self, auv_state=None):
-        red = None
-        green = None
+        red = list()
+        green = list()
         if auv_state['heading'] is not None:
             if (self.__camera_type == 'SIM'):
                 if self.__simField is None:
@@ -113,7 +113,7 @@ class ImageProcessor():
                     
                     self.__simField.configure(config)
                  
-                image = self.__camera.get_frame(auv_state['position'], auv_state['heading'], self.__simField)
+                image = self.__camera.get_frame(auv_state['position'], auv_state['heading'], self.__simField).astype('float32')
 
             elif self.__camera_type == 'PICAM':
                 pass

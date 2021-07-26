@@ -49,7 +49,7 @@ class BackSeat():
         
         # set to PICAM for the real camera
         self.__buoy_detector = ImageProcessor(camera='SIM')
-        self.__logger = Logger()
+        self.__logger = Logger(True)
         self.__autonomy = AUVController()
     
     def run(self):
@@ -81,8 +81,12 @@ class BackSeat():
                 ### green, red = self.__detect_buoys(img)
                 red, green = self.__buoy_detector.run(self.__auv_state)
                 ### ---------------------------------------------------------- #
+                if len(red) > 0:
+                    self.__logger.log_event("RED",red[0])
+                if len(green) > 0:
+                    self.__logger.log_event("GREEN",green[0])
                 
-                command_str = self.__autonomy.decide(self.__auv_state, green, red, sensor_type='ANGLE')
+                command_str = self.__autonomy.decide(self.__auv_state, green, red, sensor_type='ANGLE').lower()
 
                 ### turn your output message into a BPRMB request! 
                 if command_str != "":
@@ -92,17 +96,18 @@ class BackSeat():
                         # This is the timestamp format from NMEA: hhmmss.ss
                         hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
                         #check if a turn or thrust command
-                        if args[0] == "turn" and len(args) == 2:
+                        if len(args) == 2 and args[0] == "turn":
                             cmd = BluefinMessages.BPRMB(hhmmss, heading=float(args[1]), horiz_mode=1)
                             self.send_message(cmd)
-                        elif args[1] == "thruster" and len(args) == 2:
-                            cmd = BluefinMessages.BPRMB(hhmmss, speed=float(args[1]), speed_mode=0)
+                        elif len(args) == 2 and args[0] == "thruster":
+                            cmd = BluefinMessages.BPRMB(hhmmss, speed=int(args[1]), speed_mode=0)
                             self.send_message(cmd)
 
                 
                 time.sleep(1/self.__warp)
                         
-        except:
+        except Exception as e:
+            print(e)
             self.__client.cleanup()
             client.join()
           
@@ -110,6 +115,7 @@ class BackSeat():
     def process_message(self, msg):
         # DEAL WITH INCOMING BFNVG MESSAGES AND USE THEM TO UPDATE THE
         # STATE IN THE CONTROLLER!
+        msg = msg.decode("utf-8")
         self.__logger.log_event("RECIEVED", msg)
 
         fields = msg.split(',')

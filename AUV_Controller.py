@@ -9,24 +9,28 @@ import sys
 import numpy as np
 import math
 
-class AUVController(): #Test 43
-    def __init__(self, auv_state):
+class AUVController():
+    def __init__(self):
         
         # initialize state information
         self.__heading = None
-        self.__speed = None
+        self.__speed = 1000
         self.__rudder = None
         self.__position = None
+        self__auv_state = None
         
         # assume we want to be going the direction we're going for now
         self.__desired_heading = None
-        self.__speed = None
 
+        self.__green_buoys = None
+        self.__red_buoys = None
+
+    '''
         self.__iterations = 0 #number of iterations that it does not see any buoys
         self.__prev_gnext = None
         self.__prev_rnext = None
         self.__on_first_iteration = True
-    
+
     def initialize(self, auv_state):
         self.__heading = auv_state['heading']
         self.__speed = auv_state['speed']
@@ -35,21 +39,14 @@ class AUVController(): #Test 43
         
         # assume we want to be going the direction we're going for now
         self.__desired_heading = auv_state['heading']
-
-    def update_state(self, auv_state):
-        self.__heading = auv_state['heading']
-        self.__speed = auv_state['speed']
-        self.__rudder = auv_state['rudder']
-        self.__position = auv_state['position']
+    '''
     
-    def decide(self, auv_state, green_buoys, red_buoys, sensor_type='POSITION', distance = None):
-
-        # update state information
+    def decide(self, auv_state, green_buoys, red_buoys, sensor_type='POSITION'):
+        
+        self.__auv_state = auv_state
         self.__heading = auv_state['heading']
-        self.__speed = auv_state['speed']
-        self.__rudder = auv_state['rudder']
         self.__position = auv_state['position']
-                
+
         # determine what heading we want to go
         if sensor_type.upper() == 'POSITION': # known positions of buoys
             self.__desired_heading = self.__heading_to_position(green_buoys, red_buoys)
@@ -58,17 +55,8 @@ class AUVController(): #Test 43
         
         # determine whether and what command to issue to desired heading               
         cmd = self.__select_command()
-
-        if distance is not None: #if a distance to the buoys is inputted
-            self.__speed = self.__change_speed(distance)
         
         return cmd
-
-    def __change_speed(self, distance):
-        
-        p = 1.5
-
-        self.__speed = distance * p
         
     # return the desired heading to a public requestor
     def get_desired_heading(self):
@@ -95,8 +83,8 @@ class AUVController(): #Test 43
             #as the AUV is moving, the buoys whose angles change more rapidly are closer
             #the pair of buoys also should have a similar changes in angle
             #relative_angle = self.__isolate_buoys(gnext,rnext)  
-                
-        if len(gnext) > 0 and len(rnext) > 0: #can see only one of both buoys
+
+        if len(gnext) > 0 and len(rnext) > 0:
             relative_angle = (gnext[0] + rnext[0]) / 2.0
             #self.__on_first_iteration = 0
             #self.__prev_gnext = None
@@ -128,6 +116,7 @@ class AUVController(): #Test 43
         if len(gnext) > 0 or len(rnext) > 0: #can see a buoy
             self.__iterations = 0
         '''
+
         '''
         else:
             self.__iterations += 1
@@ -145,8 +134,11 @@ class AUVController(): #Test 43
                 self.__iterations = 0 #reset the search iterations
         '''
 
-        # heading to center of the next buoy pair        
-        tgt_hdg = np.mod(self.__heading + relative_angle + 360,360)
+        # heading to center of the next buoy pair
+        if self.__heading is not None:
+            tgt_hdg = np.mod(self.__heading + relative_angle + 360,360)
+        else:
+            tgt_hdg = np.mod(relative_angle + 360,360)
         
         return tgt_hdg
 
@@ -154,9 +146,13 @@ class AUVController(): #Test 43
     def __select_command(self):
         # Unless we need to issue a command, we will return None
         cmd = None
+        max_angle = 25.0
         
         # determine the angle between current and desired heading
-        delta_angle = self.__desired_heading - self.__heading
+        if self.__heading is not None:
+            delta_angle = self.__desired_heading - self.__heading
+        else:
+            delta_angle = self.__desired_heading
         if delta_angle > 180: # angle too big, go the other way!
             delta_angle = delta_angle - 360
         if delta_angle < -180: # angle too big, go the other way!
@@ -166,18 +162,18 @@ class AUVController(): #Test 43
         if delta_angle>2: # need to turn to right!
             #if self.__rudder >= 0: # rudder is turning the other way!
             degrees = math.ceil(delta_angle)
-            if degrees > 35.0:
-                degrees = 35.0
-            cmd = "TURN " + str(degrees)
+            if degrees > max_angle:
+                degrees = max_angle
+            cmd = "turn " + str(degrees)
         elif delta_angle<-2: # need to turn to left!
             degrees = math.ceil(delta_angle)
-            if degrees < -35.0:
-                degrees = -35.0
-            cmd = "TURN " + str(degrees)
+            if degrees < -max_angle:
+                degrees = -max_angle
+            cmd = "turn " + str(degrees)
         else: #close enough!
             cmd = ""
         
-        return cmd
+        return cmd + ";thruster " + str(self.__speed)
 
     def __distance(self, x1, y1, x2, y2):
         return math.sqrt( (x2 - x1)**2 + (y2 - y1)**2 )
