@@ -131,3 +131,4 @@ dmypy.json
 .DS_Store
 ._.DS_Store
 logs/
+frames/

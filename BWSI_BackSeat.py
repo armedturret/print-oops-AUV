@@ -62,6 +62,7 @@ class BackSeat():
         
         # set to PICAM for the real camera
         self.__buoy_detector = ImageProcessor(camera='SIM')
+        self.__logger = Logger(True)
         self.__autonomy = AUVController()
     
     def run(self):
@@ -109,49 +110,18 @@ class BackSeat():
                 
                 ### self.__autonomy.decide() probably goes here!
                 ### ---------------------------------------------------------- #
+                if len(red) > 0:
+                    self.__logger.log_event("RED",red[0])
+                if len(green) > 0:
+                    self.__logger.log_event("GREEN",green[0])
                 
+                command_str = self.__autonomy.decide(self.__auv_state, green, red, sensor_type='ANGLE').lower()
+
                 ### turn your output message into a BPRMB request! 
 
                 time.sleep(1/self.__warp)
-
-                
-                # ------------------------------------------------------------ #
-                # ----This is example code to show commands being issued
-                # ------------------------------------------------------------ #
-                if True:
-                    print(f"dt = {self.__current_time - self.__start_time}")
-                    if not engine_started and (self.__current_time - self.__start_time) > 3:
-                        ## We want to change the speed. For now we will always use the RPM (1500 Max)
-                        self.__current_time = datetime.datetime.utcnow().timestamp()
-                        # This is the timestamp format from NMEA: hhmmss.ss
-                        hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
-
-                        cmd = f"BPRMB,{hhmmss},,,,750,0,1"
-                        # NMEA requires a checksum on all the characters between the $ and the *
-                        # you can use the BluefinMessages.checksum() function to calculate
-                        # and write it like below. The checksum goes after the *
-                        msg = f"${cmd}*{hex(BluefinMessages.checksum(cmd))[2:]}\n"
-                        self.send_message(msg)
-                        engine_started = True
-
-                    if not turned and (self.__current_time - self.__start_time) > 30:
-                        ## We want to set the rudder position, use degrees plus or minus
-                        ## This command is how much to /change/ the rudder position, not to 
-                        ## set the rudder
-                        self.__current_time = datetime.datetime.utcnow().timestamp()
-                        hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
-
-                        cmd = f"BPRMB,{hhmmss},-15,,,750,0,1"
-                        msg = f"${cmd}*{hex(BluefinMessages.checksum(cmd))[2:]}\n"
-                        self.send_message(msg)
-                        turned = True
-                    
-                # ------------------------------------------------------------ #
-                # ----End of example code
-                # ------------------------------------------------------------ #
-                
-                
-        except:
+        except Exception as e:
+            print(e)
             self.__client.cleanup()
             client.join()
           
@@ -176,7 +146,8 @@ class BackSeat():
                     return
                 
             payld = msg.split('*')
-                    
+            self.__logger.log_event("RECIEVED", msg)
+
             fields = payld[0].split(',')
             
             # only process one of each type of message
@@ -207,6 +178,7 @@ class BackSeat():
                 self.__auv_state['roll'] = float(fields[10])
                 self.__auv_state['pitch'] = float(fields[11])
                 self.__auv_state['last_fix_time'] = self.receive_nmea_time(fields[12])
+                self.__logger.log_auv_location(self.__auv_state['position'][0], self.__auv_state['position'][1], self.__auv_state['heading'])
                 with open(self.__log_file, 'a') as f:
                     f.write(f"Interpreted as: {str(self.__auv_state)}\n")
     

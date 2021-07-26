@@ -87,8 +87,8 @@ class FrontSeat():
                     self.__isConnected = True
                     print("\nReceived from backseat:")
                     for msg in msgs:
-                        self.parse_payload_command(str(msg, 'utf-8'))
                         print(f"{str(msg, 'utf-8')}")
+                        self.parse_payload_command(str(msg, 'utf-8'))
                         
                     
                 if self.__doPlots and self.__isConnected:
@@ -108,8 +108,9 @@ class FrontSeat():
                     plt.draw()
  
                 count += 1
-                time.sleep(.25/self.__warp)
-        except:
+                time.sleep(1/self.__warp)
+        except Exception as e:
+            print(e)
             self.__server.cleanup()
             server.join()
             
