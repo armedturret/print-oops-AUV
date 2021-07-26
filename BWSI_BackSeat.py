@@ -47,7 +47,7 @@ class BackSeat():
         self.__client = SandsharkClient(host=host, port=port)
         self.__current_time = datetime.datetime.utcnow().timestamp()
         self.__start_time = self.__current_time
-        self.__log_file = f"backseat_{self.__start_time}.log"
+        self.__log_file = f"./logs/backseat_{self.__start_time}.log"
         self.__warp = warp
         
         self.__auv_state = dict([
