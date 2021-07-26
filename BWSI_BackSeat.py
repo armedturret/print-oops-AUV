@@ -77,9 +77,6 @@ class BackSeat():
             msg = BluefinMessages.BPLOG('ALL', 'ON')
             self.send_message(msg)
                         
-            ### These flags are for the test code. Remove them after the initial test!
-            engine_started = False
-            turned = False
             while True:
                 now = datetime.datetime.utcnow().timestamp()
                 delta_time = (now-self.__current_time) * self.__warp
@@ -98,18 +95,8 @@ class BackSeat():
                         print(f"{self.__auv_state}")
                         
 
-                ### ---------------------------------------------------------- #
-                ### Here should be the request for a photo from the camera
-                ### img = self.__camera.acquire_image()
-                ###
-                ### Here you process the image and return the angles to target
-                ### green, red = self.__detect_buoys(img)
-                self.__buoy_detector.run(self.__auv_state)
-                ### ---------------------------------------------------------- #
+                red, green = self.__buoy_detector.run(self.__auv_state)
                 
-                
-                ### self.__autonomy.decide() probably goes here!
-                ### ---------------------------------------------------------- #
                 if len(red) > 0:
                     self.__logger.log_event("RED",red[0])
                 if len(green) > 0:
@@ -117,7 +104,19 @@ class BackSeat():
                 
                 command_str = self.__autonomy.decide(self.__auv_state, green, red, sensor_type='ANGLE').lower()
 
-                ### turn your output message into a BPRMB request! 
+                if command_str != "":
+                    for command in command_str.split(';'):
+                        args = command.split(' ')
+                        self.__current_time = time.time()
+                        # This is the timestamp format from NMEA: hhmmss.ss
+                        hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
+                        #check if a turn or thrust command
+                        if len(args) == 2 and args[0] == "turn":
+                            cmd = BluefinMessages.BPRMB(hhmmss, heading=float(args[1]), horiz_mode=1)
+                            self.send_message(cmd)
+                        elif len(args) == 2 and args[0] == "thruster":
+                            cmd = BluefinMessages.BPRMB(hhmmss, speed=int(args[1]), speed_mode=0)
+                            self.send_message(cmd)
 
                 time.sleep(1/self.__warp)
         except Exception as e:
