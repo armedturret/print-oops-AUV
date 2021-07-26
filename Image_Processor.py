@@ -145,6 +145,6 @@ class ImageProcessor():
             fn = self.__image_dir / f"frame_{int(datetime.datetime.utcnow().timestamp())}.jpg"
             cv2.imwrite(str(fn), image)
         
-            # process and find the buoys!
+            green, red = self.__buoy_angles(image)
         
         return red, green

@@ -7,6 +7,7 @@ Created on Wed Jul  7 12:05:08 2021
 """
 import sys
 import numpy as np
+import math
 
 class AUVController():
     def __init__(self):
@@ -60,7 +61,6 @@ class AUVController():
     # return the desired heading to a public requestor
     def get_desired_heading(self):
         return self.__desired_heading
-    
     
     ### Private member functions
         
@@ -160,11 +160,6 @@ class AUVController():
         if delta_angle < -180: # angle too big, go the other way!
             delta_angle = delta_angle + 360
         
-        # how much do we want to turn the rudder
-        ## Note: using STANDARD RUDDER only for now! A calculation here
-        ## will improve performance!
-        turn_command = "STANDARD RUDDER"
-        
         # which way do we have to turn
         if delta_angle>2: # need to turn to right!
             #if self.__rudder >= 0: # rudder is turning the other way!
@@ -178,7 +173,7 @@ class AUVController():
                 degrees = -max_angle
             cmd = "turn " + str(degrees)
         else: #close enough!
-            cmd = "RUDDER AMIDSHIPS"
+            cmd = ""
         
         return cmd + ";thruster " + str(self.__speed)
 
