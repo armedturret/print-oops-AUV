@@ -45,13 +45,12 @@ class ImageProcessor():
         self.__image_dir.mkdir(parents=True, exist_ok=True)
 
     def __detect_green_buoy(self, img):
-        #img = cv2.imread(file_name)
         img = cv2.resize(img, (640, 480))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         imhsv = cv2.boxFilter(img, -1, (10,10))
-        img_thresh_hue = np.logical_and( imhsv[:,:,0] > 40, imhsv[:,:,0] < 80)
-        img_thresh_sat = np.logical_and( imhsv[:,:,1] > 100, imhsv[:,:,1] < 160)
-        img_thresh_val = np.logical_and( imhsv[:,:,2] > 210, imhsv[:,:,2] < 250) 
+        img_thresh_hue = np.logical_and( imhsv[:,:,0] > 40, imhsv[:,:,0] < 120)
+        img_thresh_sat = np.logical_and( imhsv[:,:,1] > 205, imhsv[:,:,1] < 240)
+        img_thresh_val = np.logical_and( imhsv[:,:,2] > 150, imhsv[:,:,2] < 225) 
         img_thresh_HSV = np.logical_and(img_thresh_hue, img_thresh_sat, img_thresh_val)
 
         object_detection_surface = cv2.boxFilter(img_thresh_HSV.astype(int), -1, (50,50), normalize=False)
@@ -66,9 +65,9 @@ class ImageProcessor():
         img = cv2.resize(img, (640, 480))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         imhsv = cv2.boxFilter(img, -1, (10,10))
-        img_thresh_hue = np.logical_and( imhsv[:,:,0] > 100, imhsv[:,:,0] < 150)
-        img_thresh_sat = np.logical_and( imhsv[:,:,1] > 60, imhsv[:,:,1] < 120)
-        img_thresh_val = np.logical_and( imhsv[:,:,2] > 200, imhsv[:,:,2] < 240)
+        img_thresh_hue = np.logical_and( imhsv[:,:,0] > 110, imhsv[:,:,0] < 125)
+        img_thresh_sat = np.logical_and( imhsv[:,:,1] > 205, imhsv[:,:,1] < 225)
+        img_thresh_val = np.logical_and( imhsv[:,:,2] > 195, imhsv[:,:,2] < 215)
         img_thresh_HSV = np.logical_and(img_thresh_hue, img_thresh_sat, img_thresh_val)
         object_detection_surface = cv2.boxFilter(img_thresh_HSV.astype(int), -1, (50,50), normalize=False)
 
@@ -78,12 +77,12 @@ class ImageProcessor():
         print("Red Center " + str(center))
         return center
 
-    def __sensor_position(pix_x, res_x): 
+    def __sensor_position(self, pix_x, res_x): 
         sensor_pos_x = (pix_x - (res_x / 2.0)) / res_x * 3.68
 
         return sensor_pos_x
 
-    def __sensor_angles(pos_x):
+    def __sensor_angles(self, pos_x):
         focal_length = 3.04
 
         horizontal_angle = np.arctan2(pos_x,focal_length)
@@ -131,9 +130,8 @@ class ImageProcessor():
                               'heading': 0}
                     
                     self.__simField.configure(config)
-                
-                #image = self.__camera.get_frame(auv_state['position'], auv_state['heading'], self.__simField).astype('float32')
-                image = self.__camera.get_frame(auv_state['position'], auv_state['heading'], self.__simField).astype('float32')
+                 
+                image = self.__camera.get_frame(auv_state['position'], auv_state['heading'], self.__simField).astype(np.float32)
 
             elif self.__camera_type == 'PICAM':
                 try:
@@ -152,12 +150,8 @@ class ImageProcessor():
                 sys.exit(-10)
         
             # log the image
+            green, red = self.__buoy_angles(image)
             fn = self.__image_dir / f"frame_{int(datetime.datetime.utcnow().timestamp())}.jpg"
             cv2.imwrite(str(fn), image)
-        
-            #green, red = self.__buoy_angles(image)
-
-            #print("Green Angle: " + str(green))
-            #print("Red Angle: " + str(red))
         
         return red, green

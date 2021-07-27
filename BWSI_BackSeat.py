@@ -229,6 +229,7 @@ class BackSeat():
             f.write(f"{self.__current_time}, Sending: {msg}\n")
 
         print(f"sending message {msg}...")
+        self.__logger.log_event("SENT", msg)
         self.__client.send_message(msg)    
         
     def send_status(self):
