@@ -14,7 +14,6 @@ import datetime
 
 import time 
 import numpy as np
-import matplotlib.pyplot as plt
 #import picamera 
 #import picamera.array
 
@@ -34,7 +33,7 @@ class ImageProcessor():
             self.__simField = None
             
         else:
-            self.__camera = picamera.PiCamera()
+            #self.__camera = picamera.PiCamera()
             self.__camera.resolution = (640, 480)
             self.__camera.framerate = 24
             time.sleep(2) # camera warmup time
@@ -44,36 +43,89 @@ class ImageProcessor():
         self.__image_dir = pathlib.Path(log_dir, 'frames')
         self.__image_dir.mkdir(parents=True, exist_ok=True)
 
-    def __detect_green_buoy(self, img):
-        img = cv2.resize(img, (640, 480))
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        imhsv = cv2.boxFilter(img, -1, (10,10))
-        img_thresh_hue = np.logical_and( imhsv[:,:,0] > 40, imhsv[:,:,0] < 120)
-        img_thresh_sat = np.logical_and( imhsv[:,:,1] > 205, imhsv[:,:,1] < 240)
-        img_thresh_val = np.logical_and( imhsv[:,:,2] > 150, imhsv[:,:,2] < 225) 
-        img_thresh_HSV = np.logical_and(img_thresh_hue, img_thresh_sat, img_thresh_val)
+    def __detect_red_buoy(self, small_img):
+    
+        small_img = cv2.boxFilter(small_img, -1, (10,10)) #reduce noise with smoothing
 
-        object_detection_surface = cv2.boxFilter(img_thresh_HSV.astype(int), -1, (50,50), normalize=False)
+        blue = small_img[:,:,0]
+        green = small_img[:,:,1]
+        red = small_img[:,:,2]
 
-        centers = np.argwhere(object_detection_surface > 50)
-        center = np.mean(centers, axis=0) if centers.shape[0] > 0 else np.array([])
+        blue_thresh = np.logical_and(blue > 150, blue < 255)
+        green_thresh = np.logical_and(green > 0, green < 100)
+        red_thresh = np.logical_and(red > 50, red < 255)
 
-        return center
+        bg_thresh = np.logical_and(blue_thresh,green_thresh)
+        bgr_thresh = np.logical_and(bg_thresh,red_thresh)
 
-    def __detect_red_buoy(self, img):
-        img = cv2.resize(img, (640, 480))
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        imhsv = cv2.boxFilter(img, -1, (10,10))
-        img_thresh_hue = np.logical_and( imhsv[:,:,0] > 110, imhsv[:,:,0] < 125)
-        img_thresh_sat = np.logical_and( imhsv[:,:,1] > 205, imhsv[:,:,1] < 225)
-        img_thresh_val = np.logical_and( imhsv[:,:,2] > 195, imhsv[:,:,2] < 215)
-        img_thresh_HSV = np.logical_and(img_thresh_hue, img_thresh_sat, img_thresh_val)
-        object_detection_surface = cv2.boxFilter(img_thresh_HSV.astype(int), -1, (50,50), normalize=False)
+        hsv_img = cv2.boxFilter(bgr_thresh.astype(int), -1, (50,50), normalize=False)
 
-        centers = np.argwhere(object_detection_surface > 50)
-        center = np.mean(centers, axis=0) if centers.shape[0] > 0 else np.array([])
-        
-        return center
+        scaling_factor = 255/np.max(hsv_img)
+
+        img = hsv_img*scaling_factor
+        threshold = 217
+        img8 = img.astype(np.uint8)
+
+        thresh, img_out = cv2.threshold(img8, threshold, 255, cv2.THRESH_BINARY)
+        #pixels = np.argwhere(img>thresh) #find the pixels that are above the threshold
+
+        contours, hierarchy = cv2.findContours(img_out, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+        #plt.imshow(bgr_thresh)
+
+        if len(contours) > 0:
+            if len(contours) > 1:
+                print(contours)
+            xymeans2 = contours[0].mean(axis=0)
+
+            x_coordinate = xymeans2[0][0]
+            y_coordinate = xymeans2[0][1]
+
+            return np.array([x_coordinate,y_coordinate])
+        else:
+            return np.array([])
+
+    def __detect_green_buoy(self, small_img):
+
+        small_img = cv2.boxFilter(small_img, -1, (10,10)) #reduce noise with smoothing
+
+        blue = small_img[:,:,0]
+        green = small_img[:,:,1]
+        red = small_img[:,:,2]
+
+        blue_thresh = np.logical_and(blue > 40, blue < 255)
+        green_thresh = np.logical_and(green > 140, green < 255)
+        red_thresh = np.logical_and(red > 0, red < 80)
+
+        bg_thresh = np.logical_and(blue_thresh,green_thresh)
+        bgr_thresh = np.logical_and(bg_thresh,red_thresh)
+
+        hsv_img = cv2.boxFilter(bgr_thresh.astype(int), -1, (50,50), normalize=False)
+
+        scaling_factor = 255/np.max(hsv_img)
+
+        img = hsv_img*scaling_factor
+        threshold = 217
+        img8 = img.astype(np.uint8)
+
+        thresh, img_out = cv2.threshold(img8, threshold, 255, cv2.THRESH_BINARY)
+        #pixels = np.argwhere(img>thresh) #find the pixels that are above the threshold
+
+        contours, hierarchy = cv2.findContours(img_out, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+        #plt.imshow(bgr_thresh)
+
+        if len(contours) > 0:
+            if len(contours) > 1:
+                print(contours)
+            xymeans2 = contours[0].mean(axis=0)
+
+            x_coordinate = xymeans2[0][0]
+            y_coordinate = xymeans2[0][1]
+
+            return np.array([x_coordinate,y_coordinate])
+        else:
+            return np.array([])
 
     def __sensor_position(self, pix_x, res_x): 
         sensor_pos_x = (pix_x - (res_x / 2.0)) / res_x * 3.68
@@ -105,13 +157,8 @@ class ImageProcessor():
             red_pos_x = self.__sensor_position(red_x, img_x)
             r_sa = self.__sensor_angles(red_pos_x)
             red_horiz.append(r_sa)
-        return (green_horiz, red_horiz) 
+        return (green_horiz, red_horiz)
     
-    # ------------------------------------------------------------------------ #
-    # Run an iteration of the image processor. 
-    # The sim version needs the auv state to generate simulated imagery
-    # the PICAM does not need any auv_state input
-    # ------------------------------------------------------------------------ #
     def run(self, auv_state=None):
         red = list()
         green = list()
@@ -129,14 +176,15 @@ class ImageProcessor():
                     
                     self.__simField.configure(config)
                  
-                image = self.__camera.get_frame(auv_state['position'], auv_state['heading'], self.__simField).astype(np.float32)
+                # synthesize an image
+                image = self.__camera.get_frame(auv_state['position'], auv_state['heading'], self.__simField)
 
             elif self.__camera_type == 'PICAM':
                 try:
                     self.__camera.capture(self.__image, 'bgr')
                 except:
                     # restart the camera
-                    self.__camera = picamera.PiCamera()
+                    #self.__camera = picamera.PiCamera()
                     self.__camera.resolution = (640, 480)
                     self.__camera.framerate = 24
                     time.sleep(2) # camera warmup time
@@ -148,9 +196,9 @@ class ImageProcessor():
                 sys.exit(-10)
         
             # log the image
-            green, red = self.__buoy_angles(image)
             fn = self.__image_dir / f"frame_{int(datetime.datetime.utcnow().timestamp())}.jpg"
             cv2.imwrite(str(fn), image)
-            
+        
+            green,red = self.__buoy_angles(image)
         
         return red, green
