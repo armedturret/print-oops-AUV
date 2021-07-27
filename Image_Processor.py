@@ -131,7 +131,8 @@ class ImageProcessor():
                               'heading': 0}
                     
                     self.__simField.configure(config)
-                 
+                
+                #image = self.__camera.get_frame(auv_state['position'], auv_state['heading'], self.__simField).astype('float32')
                 image = self.__camera.get_frame(auv_state['position'], auv_state['heading'], self.__simField).astype('float32')
 
             elif self.__camera_type == 'PICAM':
@@ -154,9 +155,9 @@ class ImageProcessor():
             fn = self.__image_dir / f"frame_{int(datetime.datetime.utcnow().timestamp())}.jpg"
             cv2.imwrite(str(fn), image)
         
-            green, red = self.__buoy_angles(image)
+            #green, red = self.__buoy_angles(image)
 
-            print("Green Angle: " + str(green))
-            print("Red Angle: " + str(red))
+            #print("Green Angle: " + str(green))
+            #print("Red Angle: " + str(red))
         
         return red, green
