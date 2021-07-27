@@ -49,7 +49,7 @@ class ImageProcessor():
         img = cv2.resize(img, (640, 480))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         imhsv = cv2.boxFilter(img, -1, (10,10))
-        img_thresh_hue = np.logical_and( imhsv[:,:,0] > 80, imhsv[:,:,0] < 100)
+        img_thresh_hue = np.logical_and( imhsv[:,:,0] > 40, imhsv[:,:,0] < 120)
         img_thresh_sat = np.logical_and( imhsv[:,:,1] > 205, imhsv[:,:,1] < 240)
         img_thresh_val = np.logical_and( imhsv[:,:,2] > 150, imhsv[:,:,2] < 225) 
         img_thresh_HSV = np.logical_and(img_thresh_hue, img_thresh_sat, img_thresh_val)
@@ -149,9 +149,9 @@ class ImageProcessor():
                 sys.exit(-10)
         
             # log the image
+            green, red = self.__buoy_angles(image)
             fn = self.__image_dir / f"frame_{int(datetime.datetime.utcnow().timestamp())}.jpg"
             cv2.imwrite(str(fn), image)
-        
-            green, red = self.__buoy_angles(image)
+            
         
         return red, green
