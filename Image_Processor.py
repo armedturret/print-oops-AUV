@@ -44,38 +44,89 @@ class ImageProcessor():
         self.__image_dir = pathlib.Path(log_dir, 'frames')
         self.__image_dir.mkdir(parents=True, exist_ok=True)
 
-    def __detect_green_buoy(self, img):
-        img = cv2.resize(img, (640, 480))
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        imhsv = cv2.boxFilter(img, -1, (10,10))
-        img_thresh_hue = np.logical_and( imhsv[:,:,0] > 40, imhsv[:,:,0] < 120)
-        img_thresh_sat = np.logical_and( imhsv[:,:,1] > 205, imhsv[:,:,1] < 240)
-        img_thresh_val = np.logical_and( imhsv[:,:,2] > 150, imhsv[:,:,2] < 225) 
-        img_thresh_HSV = np.logical_and(img_thresh_hue, img_thresh_sat, img_thresh_val)
+    def __detect_red_buoy(small_img):
+    
+        small_img = cv2.boxFilter(small_img, -1, (10,10)) #reduce noise with smoothing
 
-        object_detection_surface = cv2.boxFilter(img_thresh_HSV.astype(int), -1, (50,50), normalize=False)
+        blue = small_img[:,:,0]
+        green = small_img[:,:,1]
+        red = small_img[:,:,2]
 
-        centers = np.argwhere(object_detection_surface > 50)
-        center = np.mean(centers, axis=0) if centers.shape[0] > 0 else np.array([])
-        
-        print("Green Centre " + str(center))
-        return center
+        blue_thresh = np.logical_and(blue > 150, blue < 255)
+        green_thresh = np.logical_and(green > 0, green < 100)
+        red_thresh = np.logical_and(red > 50, red < 255)
 
-    def __detect_red_buoy(self, img):
-        img = cv2.resize(img, (640, 480))
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        imhsv = cv2.boxFilter(img, -1, (10,10))
-        img_thresh_hue = np.logical_and( imhsv[:,:,0] > 110, imhsv[:,:,0] < 125)
-        img_thresh_sat = np.logical_and( imhsv[:,:,1] > 205, imhsv[:,:,1] < 225)
-        img_thresh_val = np.logical_and( imhsv[:,:,2] > 195, imhsv[:,:,2] < 215)
-        img_thresh_HSV = np.logical_and(img_thresh_hue, img_thresh_sat, img_thresh_val)
-        object_detection_surface = cv2.boxFilter(img_thresh_HSV.astype(int), -1, (50,50), normalize=False)
+        bg_thresh = np.logical_and(blue_thresh,green_thresh)
+        bgr_thresh = np.logical_and(bg_thresh,red_thresh)
 
-        centers = np.argwhere(object_detection_surface > 50)
-        center = np.mean(centers, axis=0) if centers.shape[0] > 0 else np.array([])
-        
-        print("Red Center " + str(center))
-        return center
+        hsv_img = cv2.boxFilter(bgr_thresh.astype(int), -1, (50,50), normalize=False)
+
+        scaling_factor = 255/np.max(hsv_img)
+
+        img = hsv_img*scaling_factor
+        threshold = 217
+        img8 = img.astype(np.uint8)
+
+        thresh, img_out = cv2.threshold(img8, threshold, 255, cv2.THRESH_BINARY)
+        #pixels = np.argwhere(img>thresh) #find the pixels that are above the threshold
+
+        contours, hierarchy = cv2.findContours(img_out, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+        #plt.imshow(bgr_thresh)
+
+        if len(contours) > 0:
+            if len(contours) > 1:
+                print(contours)
+            xymeans2 = contours[0].mean(axis=0)
+
+            x_coordinate = xymeans2[0][0]
+            y_coordinate = xymeans2[0][1]
+
+            plt.plot(x_coordinate,y_coordinate, color='yellow', marker='.')
+        else:
+            print("failed.")
+
+    def __detect_green_buoy(small_img):
+
+        small_img = cv2.boxFilter(small_img, -1, (10,10)) #reduce noise with smoothing
+
+        blue = small_img[:,:,0]
+        green = small_img[:,:,1]
+        red = small_img[:,:,2]
+
+        blue_thresh = np.logical_and(blue > 40, blue < 255)
+        green_thresh = np.logical_and(green > 140, green < 255)
+        red_thresh = np.logical_and(red > 0, red < 80)
+
+        bg_thresh = np.logical_and(blue_thresh,green_thresh)
+        bgr_thresh = np.logical_and(bg_thresh,red_thresh)
+
+        hsv_img = cv2.boxFilter(bgr_thresh.astype(int), -1, (50,50), normalize=False)
+
+        scaling_factor = 255/np.max(hsv_img)
+
+        img = hsv_img*scaling_factor
+        threshold = 217
+        img8 = img.astype(np.uint8)
+
+        thresh, img_out = cv2.threshold(img8, threshold, 255, cv2.THRESH_BINARY)
+        #pixels = np.argwhere(img>thresh) #find the pixels that are above the threshold
+
+        contours, hierarchy = cv2.findContours(img_out, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+        #plt.imshow(bgr_thresh)
+
+        if len(contours) > 0:
+            if len(contours) > 1:
+                print(contours)
+            xymeans2 = contours[0].mean(axis=0)
+
+            x_coordinate = xymeans2[0][0]
+            y_coordinate = xymeans2[0][1]
+
+            plt.plot(x_coordinate,y_coordinate, color='red', marker='.')
+        else:
+            print("failed.")
 
     def __sensor_position(self, pix_x, res_x): 
         sensor_pos_x = (pix_x - (res_x / 2.0)) / res_x * 3.68
