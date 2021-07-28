@@ -138,9 +138,9 @@ class AUVController():
 
         # heading to center of the next buoy pair
         if self.__heading is not None:
-            tgt_hdg = np.mod(self.__heading + relative_angle + 360,360)
+            tgt_hdg = np.mod(self.__heading + relative_angle,360)
         else:
-            tgt_hdg = np.mod(relative_angle + 360,360)
+            tgt_hdg = np.mod(relative_angle,360)
         
         return tgt_hdg
 
@@ -163,14 +163,14 @@ class AUVController():
         # which way do we have to turn
         if delta_angle>2: # need to turn to right!
             #if self.__rudder >= 0: # rudder is turning the other way!
-            degrees = math.ceil(delta_angle)
-            if degrees > max_angle:
-                degrees = max_angle
-            cmd = "turn " + str(degrees)
-        elif delta_angle<-2: # need to turn to left!
-            degrees = math.ceil(delta_angle)
+            degrees = -math.ceil(delta_angle)
             if degrees < -max_angle:
                 degrees = -max_angle
+            cmd = "turn " + str(degrees)
+        elif delta_angle<-2: # need to turn to left!
+            degrees = -math.ceil(delta_angle)
+            if degrees > max_angle:
+                degrees = max_angle
             cmd = "turn " + str(degrees)
         else: #close enough!
             cmd = ""

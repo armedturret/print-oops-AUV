@@ -14,7 +14,6 @@ import datetime
 
 import time 
 import numpy as np
-import matplotlib.pyplot as plt
 #import picamera 
 #import picamera.array
 
@@ -44,7 +43,7 @@ class ImageProcessor():
         self.__image_dir = pathlib.Path(log_dir, 'frames')
         self.__image_dir.mkdir(parents=True, exist_ok=True)
 
-    def __detect_red_buoy(small_img):
+    def __detect_red_buoy(self, small_img):
     
         small_img = cv2.boxFilter(small_img, -1, (10,10)) #reduce noise with smoothing
 
@@ -82,11 +81,11 @@ class ImageProcessor():
             x_coordinate = xymeans2[0][0]
             y_coordinate = xymeans2[0][1]
 
-            plt.plot(x_coordinate,y_coordinate, color='yellow', marker='.')
+            return np.array([x_coordinate,y_coordinate])
         else:
-            print("failed.")
+            return np.array([])
 
-    def __detect_green_buoy(small_img):
+    def __detect_green_buoy(self, small_img):
 
         small_img = cv2.boxFilter(small_img, -1, (10,10)) #reduce noise with smoothing
 
@@ -124,9 +123,9 @@ class ImageProcessor():
             x_coordinate = xymeans2[0][0]
             y_coordinate = xymeans2[0][1]
 
-            plt.plot(x_coordinate,y_coordinate, color='red', marker='.')
+            return np.array([x_coordinate,y_coordinate])
         else:
-            print("failed.")
+            return np.array([])
 
     def __sensor_position(self, pix_x, res_x): 
         sensor_pos_x = (pix_x - (res_x / 2.0)) / res_x * 3.68
@@ -158,13 +157,8 @@ class ImageProcessor():
             red_pos_x = self.__sensor_position(red_x, img_x)
             r_sa = self.__sensor_angles(red_pos_x)
             red_horiz.append(r_sa)
-        return (green_horiz, red_horiz) 
+        return (green_horiz, red_horiz)
     
-    # ------------------------------------------------------------------------ #
-    # Run an iteration of the image processor. 
-    # The sim version needs the auv state to generate simulated imagery
-    # the PICAM does not need any auv_state input
-    # ------------------------------------------------------------------------ #
     def run(self, auv_state=None):
         red = list()
         green = list()
@@ -182,7 +176,8 @@ class ImageProcessor():
                     
                     self.__simField.configure(config)
                  
-                image = self.__camera.get_frame(auv_state['position'], auv_state['heading'], self.__simField).astype(np.float32)
+                # synthesize an image
+                image = self.__camera.get_frame(auv_state['position'], auv_state['heading'], self.__simField)
 
             elif self.__camera_type == 'PICAM':
                 try:
@@ -201,8 +196,9 @@ class ImageProcessor():
                 sys.exit(-10)
         
             # log the image
-            green, red = self.__buoy_angles(image)
             fn = self.__image_dir / f"frame_{int(datetime.datetime.utcnow().timestamp())}.jpg"
             cv2.imwrite(str(fn), image)
+        
+            green,red = self.__buoy_angles(image)
         
         return red, green
