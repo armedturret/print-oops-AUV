@@ -29,15 +29,15 @@ class ImageProcessor():
         self.__camera_type = camera.upper()
 
         if self.__camera_type == 'SIM':
-            self.__camera = BWSI_Camera(max_angle=31.1, visibility=50)
+            self.__camera = BWSI_Camera(max_angle=24.4, visibility=50)
             self.__simField = None
             
         else:
             #self.__camera = picamera.PiCamera()
-            self.__camera.resolution = (640, 480)
+            self.__camera.resolution = (480, 640)
             self.__camera.framerate = 24
             time.sleep(2) # camera warmup time
-            self.__image = np.empty((480*640*3,), dtype=np.uint8)
+            self.__image = np.empty((640*480*3,), dtype=np.uint8)
 
         # create my save directory
         self.__image_dir = pathlib.Path(log_dir, 'frames')
@@ -185,11 +185,11 @@ class ImageProcessor():
                 except:
                     # restart the camera
                     #self.__camera = picamera.PiCamera()
-                    self.__camera.resolution = (640, 480)
+                    self.__camera.resolution = (480, 640)
                     self.__camera.framerate = 24
                     time.sleep(2) # camera warmup time
                     
-                image = self.__image.reshape((480, 640, 3))
+                image = self.__image.reshape((640, 480, 3))
         
             else:
                 print(f"Unknown camera type: {self.__camera_type}")
