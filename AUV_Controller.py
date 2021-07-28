@@ -14,10 +14,10 @@ class AUVController():
         
         # initialize state information
         self.__heading = None
-        self.__speed = 1000
-        self.__rudder = None
+        self.__speed = 750
+        #self.__rudder = None
         self.__position = None
-        self__auv_state = None
+        #self__auv_state = None
         
         # assume we want to be going the direction we're going for now
         self.__desired_heading = None
@@ -44,7 +44,7 @@ class AUVController():
     
     def decide(self, auv_state, green_buoys, red_buoys, sensor_type='POSITION'):
         
-        self.__auv_state = auv_state
+        #self.__auv_state = auv_state
         self.__heading = auv_state['heading']
         self.__position = auv_state['position']
 
@@ -157,9 +157,10 @@ class AUVController():
         
         if len(green_buoys) > 0 and len(red_buoys) > 0: #not both empty
             angle_diff = red_buoys[0] - green_buoys[0]
+            print(angle_diff)
             self.__saw_gate = True
         
-        if angle_diff > threshold:
+        if abs(angle_diff) > threshold:
             self.__angle_diff = angle_diff
         
         # determine the angle between current and desired heading
@@ -186,10 +187,10 @@ class AUVController():
             cmd = "turn " + str(-degrees) #with negative angle, it turns right
         elif len(red_buoys) == 0 and len(green_buoys) == 0 and self.__saw_gate and self.__angle_diff != 0.0: #just passed gate
             if self.__angle_diff > 0:
-                cmd = "turn " + str(max_angle)
-            elif self.__angle_diff < 0:
                 cmd = "turn " + str(-max_angle)
-            #self.__saw_gate = False
+            elif self.__angle_diff < 0:
+                cmd = "turn " + str(max_angle)
+            self.__saw_gate = False
             self.__angle_diff = 0.0
         else: #keep current course
             cmd = ""
