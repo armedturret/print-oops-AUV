@@ -154,10 +154,17 @@ class AUVController():
         threshold = 1.0
 
         angle_diff = 0.0
+
+        condition = len(red_buoys) == 0 and len(green_buoys) == 0 and self.__saw_gate and self.__angle_diff != 0.0
         
+        print("WILL FLASHILY TURN THE OTHER WAY: " + str(condition))
+        print("SAW GATE: " + str(self.__saw_gate))
+        print("RED BUOYS: " + str(len(red_buoys)))
+        print("GREEN BUOYS: " + str(len(green_buoys)))
+        print("ANGLE DIFF OF DARKNESS: " + str(angle_diff))
+
         if len(green_buoys) > 0 and len(red_buoys) > 0: #not both empty
             angle_diff = red_buoys[0] - green_buoys[0]
-            print(angle_diff)
             self.__saw_gate = True
         
         if abs(angle_diff) > threshold:
@@ -186,10 +193,10 @@ class AUVController():
                 degrees = -max_angle
             cmd = "turn " + str(-degrees) #with negative angle, it turns right
         elif len(red_buoys) == 0 and len(green_buoys) == 0 and self.__saw_gate and self.__angle_diff != 0.0: #just passed gate
-            if self.__angle_diff > 0:
-                cmd = "turn " + str(-max_angle)
-            elif self.__angle_diff < 0:
+            if self.__angle_diff > 0: #red buoy angle was greater, turn to left
                 cmd = "turn " + str(max_angle)
+            elif self.__angle_diff < 0:
+                cmd = "turn " + str(-max_angle)
             self.__saw_gate = False
             self.__angle_diff = 0.0
         else: #keep current course
