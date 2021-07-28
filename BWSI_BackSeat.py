@@ -109,18 +109,20 @@ class BackSeat():
                 command_str = self.__autonomy.decide(self.__auv_state, green, red, sensor_type='ANGLE').lower()
 
                 if command_str != "":
+                    heading = 0.0
+                    speed = 0.0
+                    # This is the timestamp format from NMEA: hhmmss.ss
+                    self.__current_time = time.time()
+                    hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
                     for command in command_str.split(';'):
                         args = command.split(' ')
-                        self.__current_time = time.time()
-                        # This is the timestamp format from NMEA: hhmmss.ss
-                        hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
                         #check if a turn or thrust command
                         if len(args) == 2 and args[0] == "turn":
-                            cmd = BluefinMessages.BPRMB(hhmmss, heading=float(args[1]), horiz_mode=1)
-                            self.send_message(cmd)
+                            heading = float(args[1])
                         elif len(args) == 2 and args[0] == "thruster":
-                            cmd = BluefinMessages.BPRMB(hhmmss, speed=int(args[1]), speed_mode=0)
-                            self.send_message(cmd)
+                            speed = int(args[1])
+                    cmd = BluefinMessages.BPRMB(hhmmss, speed=speed, heading=heading, speed_mode=0, horiz_mode=1)
+                    self.send_message(cmd)
 
                 time.sleep(1/self.__warp)
         except:
