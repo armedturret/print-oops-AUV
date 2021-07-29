@@ -190,7 +190,7 @@ class ImageProcessor():
                     self.__camera.capture(self.__image, 'bgr')
                 except:
                     # restart the camera
-                    #self.__camera = picamera.PiCamera()
+                    self.__camera = picamera.PiCamera()
                     self.__camera.resolution = (640, 480)
                     self.__camera.rotation = 180
                     self.__camera.framerate = 24
