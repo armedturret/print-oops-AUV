@@ -65,7 +65,7 @@ class BackSeat():
         self.__datum = None
         
         # set to PICAM for the real camera
-        if getpass.getuser() == 'auvpi':
+        if True:
             self.__buoy_detector = ImageProcessor(camera='PICAM')
         else:
             self.__buoy_detector = ImageProcessor(camera='SIM')

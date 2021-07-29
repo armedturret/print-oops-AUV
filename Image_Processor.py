@@ -16,7 +16,7 @@ import time
 import numpy as np
 import getpass
 
-if getpass.getuser() == 'auvpi':
+if True:
     import picamera 
     import picamera.array
 
