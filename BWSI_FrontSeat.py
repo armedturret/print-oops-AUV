@@ -108,7 +108,7 @@ class FrontSeat():
                     plt.draw()
  
                 count += 1
-                time.sleep(1/self.__warp)
+                time.sleep(.2/self.__warp)
         except Exception as e:
             print(e)
             self.__server.cleanup()

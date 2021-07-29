@@ -13,22 +13,26 @@ import time
 import threading
 import time
 import datetime
-
+import traceback
+import getpass
 import utm
 
 from Image_Processor import ImageProcessor
+from Logger import Logger
 from AUV_Controller import AUVController
 
 from pynmea2 import pynmea2
 import BluefinMessages
 from Sandshark_Interface import SandsharkClient
 
+from Logger import Logger
+
 # Check the NMEA checksum
 def checkthesum(msg):
     fields = msg.split('*')
     cmd = fields[0][1:]
     expected = str(hex(BluefinMessages.checksum(cmd))[2:])
-    if expected.upper() != fields[1].upper():
+    if expected.upper() != fields[1][0:2].upper():
         print(f"cmd = {cmd}\n")
         print(f"{expected} != {fields[1]}\n")
         return False
@@ -43,7 +47,7 @@ class BackSeat():
         self.__client = SandsharkClient(host=host, port=port)
         self.__current_time = datetime.datetime.utcnow().timestamp()
         self.__start_time = self.__current_time
-        self.__log_file = f"backseat_{self.__start_time}.log"
+        self.__log_file = f"./logs/backseat_{self.__start_time}.log"
         self.__warp = warp
         
         self.__auv_state = dict([
@@ -61,7 +65,10 @@ class BackSeat():
         self.__datum = None
         
         # set to PICAM for the real camera
-        self.__buoy_detector = ImageProcessor(camera='SIM')
+        if getpass.getuser() == 'auvpi':
+            self.__buoy_detector = ImageProcessor(camera='PICAM')
+        else:
+            self.__buoy_detector = ImageProcessor(camera='SIM')
         self.__logger = Logger(True)
         self.__autonomy = AUVController()
     
@@ -103,24 +110,34 @@ class BackSeat():
                     self.__logger.log_event("GREEN",green[0])
                 
                 command_str = self.__autonomy.decide(self.__auv_state, green, red, sensor_type='ANGLE').lower()
+                print(f"command_string: {command_str}")
 
-                if command_str != "":
+                self.__current_time = datetime.datetime.utcnow().timestamp()
+                if self.__current_time - self.__start_time > 60.0:
+                    hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
+                    cmd = f"BPRMB,{hhmmss},0,1,0,0,0,1"
+                    msg = f"${cmd}*{hex(BluefinMessages.checksum(cmd))[2:]}\r\n"
+                    self.send_message(msg)
+                elif command_str != "":
+                    heading = 0.0
+                    speed = 0.0
+                    # This is the timestamp format from NMEA: hhmmss.ss
+                    self.__current_time = time.time()
+                    hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
                     for command in command_str.split(';'):
                         args = command.split(' ')
-                        self.__current_time = time.time()
-                        # This is the timestamp format from NMEA: hhmmss.ss
-                        hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
                         #check if a turn or thrust command
                         if len(args) == 2 and args[0] == "turn":
-                            cmd = BluefinMessages.BPRMB(hhmmss, heading=float(args[1]), horiz_mode=1)
-                            self.send_message(cmd)
+                            heading = float(args[1])
                         elif len(args) == 2 and args[0] == "thruster":
-                            cmd = BluefinMessages.BPRMB(hhmmss, speed=int(args[1]), speed_mode=0)
-                            self.send_message(cmd)
+                            speed = int(args[1])
+                    cmd = f"BPRMB,{hhmmss},{heading},1,0,{speed},0,1"
+                    msg = f"${cmd}*{hex(BluefinMessages.checksum(cmd))[2:]}\r\n"
+                    self.send_message(msg)
 
                 time.sleep(1/self.__warp)
-        except Exception as e:
-            print(e)
+        except:
+            traceback.print_exc()
             self.__client.cleanup()
             client.join()
           
@@ -225,6 +242,7 @@ class BackSeat():
             f.write(f"{self.__current_time}, Sending: {msg}\n")
 
         print(f"sending message {msg}...")
+        self.__logger.log_event("SENT", msg)
         self.__client.send_message(msg)    
         
     def send_status(self):
