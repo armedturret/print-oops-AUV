@@ -99,9 +99,9 @@ class ImageProcessor():
         green = small_img[:,:,1]
         red = small_img[:,:,2]
 
-        blue_thresh = np.logical_and(blue > 40, blue < 255)
-        green_thresh = np.logical_and(green > 140, green < 255)
-        red_thresh = np.logical_and(red > 0, red < 80)
+        blue_thresh = np.logical_and(blue > 220, blue < 235)
+        green_thresh = np.logical_and(green > 80, green < 240)
+        red_thresh = np.logical_and(red > 0, red < 20)
 
         bg_thresh = np.logical_and(blue_thresh,green_thresh)
         bgr_thresh = np.logical_and(bg_thresh,red_thresh)
