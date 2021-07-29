@@ -32,7 +32,7 @@ def checkthesum(msg):
     fields = msg.split('*')
     cmd = fields[0][1:]
     expected = str(hex(BluefinMessages.checksum(cmd))[2:])
-    if expected.upper() != fields[1].upper():
+    if expected.upper() != fields[1][0:2].upper():
         print(f"cmd = {cmd}\n")
         print(f"{expected} != {fields[1]}\n")
         return False
@@ -107,6 +107,7 @@ class BackSeat():
                     self.__logger.log_event("GREEN",green[0])
                 
                 command_str = self.__autonomy.decide(self.__auv_state, green, red, sensor_type='ANGLE').lower()
+                print(f"command_string: {command_str}")
 
                 if command_str != "":
                     heading = 0.0
@@ -121,8 +122,11 @@ class BackSeat():
                             heading = float(args[1])
                         elif len(args) == 2 and args[0] == "thruster":
                             speed = int(args[1])
-                    cmd = BluefinMessages.BPRMB(hhmmss, speed=speed, heading=heading, speed_mode=0, horiz_mode=1)
-                    self.send_message(cmd)
+                    self.current_time = datetime.datetime.utcnow().timestamp()
+                    hhmmss = datetime.datetime.fromtimestamp(self.current_time).strftime('%H%M%S.%f')[:-4]
+                    cmd = f"BPRMB,{hhmmss},{heading},1,0,{speed},0,1"
+                    msg = f"${cmd}*{hex(BluefinMessages.checksum(cmd))[2:]}\r\n"
+                    self.send_message(msg)
 
                 time.sleep(1/self.__warp)
         except:

@@ -21,28 +21,9 @@ class AUVController():
         
         # assume we want to be going the direction we're going for now
         self.__desired_heading = None
-
         self.__angle_diff = 0.0
-
         self.__saw_gate = False
-
         self.__turn_adjust = False
-
-    '''
-        self.__iterations = 0 #number of iterations that it does not see any buoys
-        self.__prev_gnext = None
-        self.__prev_rnext = None
-        self.__on_first_iteration = True
-
-    def initialize(self, auv_state):
-        self.__heading = auv_state['heading']
-        self.__speed = auv_state['speed']
-        self.__rudder = auv_state['rudder']
-        self.__position = auv_state['position']
-        
-        # assume we want to be going the direction we're going for now
-        self.__desired_heading = auv_state['heading']
-    '''
     
     def decide(self, auv_state, green_buoys, red_buoys, sensor_type='POSITION'):
         
@@ -181,45 +162,30 @@ class AUVController():
         print("SAW GATE: " + str(self.__saw_gate))
         print("RED BUOYS: " + str(len(red_buoys)))
         print("GREEN BUOYS: " + str(len(green_buoys)))
-        print("ANGLE DIFF OF DARKNESS: " + str(self.__angle_diff))
-
-        '''
-            elif (len(red_buoys) == 0 or len(green_buoys) == 0) and self.__saw_gate and abs(self.__angle_diff) > 0.0: #just passed gate
-                if self.__angle_diff > 0: #red buoy angle was greater, turn to left
-                    cmd = "turn " + str(max_angle)
-                elif self.__angle_diff < 0:
-                    cmd = "turn " + str(-max_angle)
-                self.__turn_adjust = True
-                self.__saw_gate = False
-                #self.__angle_diff = 0.0
-        '''
+        print("ANGLE DIFF: " + str(self.__angle_diff))
         
-        if self.__turn_adjust:
-            '''
+        # which way do we have to turn
+        if delta_angle>2: # need to turn to right!
+            #if self.__rudder >= 0: # rudder is turning the other way!
+            degrees = math.ceil(delta_angle)
+            if degrees > max_angle:
+                degrees = max_angle
+            cmd = "turn " + str(-degrees) #with positive angle, it turns left
+        elif delta_angle<-2: # need to turn to left!
+            degrees = math.ceil(delta_angle)
+            if degrees < -max_angle:
+                degrees = -max_angle
+            cmd = "turn " + str(-degrees) #with negative angle, it turns right
+        elif (len(red_buoys) == 0 or len(green_buoys) == 0) and self.__saw_gate and abs(self.__angle_diff) > 0.0:
             if self.__angle_diff > 0: #red buoy angle was greater, turn to left
                 cmd = "turn " + str(max_angle)
             elif self.__angle_diff < 0:
                 cmd = "turn " + str(-max_angle)
-            self.__turn_adjust = True
-            self.__saw_gate = False
+                self.__turn_adjust = True
+                self.__saw_gate = False
             #self.__angle_diff = 0.0
-            '''
-            cmd = "turn 35.0"
-        else:
-            # which way do we have to turn
-            if delta_angle>2: # need to turn to right!
-                #if self.__rudder >= 0: # rudder is turning the other way!
-                degrees = math.ceil(delta_angle)
-                if degrees > max_angle:
-                    degrees = max_angle
-                cmd = "turn " + str(-degrees) #with positive angle, it turns left
-            elif delta_angle<-2: # need to turn to left!
-                degrees = math.ceil(delta_angle)
-                if degrees < -max_angle:
-                    degrees = -max_angle
-                cmd = "turn " + str(-degrees) #with negative angle, it turns right
-            else: #keep current course
-                cmd = ""
+        else: #keep current course
+            cmd = ""
         
         return cmd + ";thruster " + str(self.__speed)
 
