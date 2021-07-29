@@ -14,7 +14,7 @@ class AUVController():
         
         # initialize state information
         self.__heading = None
-        self.__speed = 1000
+        self.__speed = 850
         #self.__rudder = None
         self.__position = None
         #self__auv_state = None
