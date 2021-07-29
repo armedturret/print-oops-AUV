@@ -14,7 +14,7 @@ import threading
 import time
 import datetime
 import traceback
-import os
+import getpass
 import utm
 
 from Image_Processor import ImageProcessor
@@ -65,10 +65,10 @@ class BackSeat():
         self.__datum = None
         
         # set to PICAM for the real camera
-        if os.uname().nodename == 'auvpi':
-            self.__buoy_detector = ImageProcessor(camera='SIM')
-        else:
+        if getpass.getuser() == 'auvpi':
             self.__buoy_detector = ImageProcessor(camera='PICAM')
+        else:
+            self.__buoy_detector = ImageProcessor(camera='SIM')
         self.__logger = Logger(True)
         self.__autonomy = AUVController()
     
@@ -112,7 +112,13 @@ class BackSeat():
                 command_str = self.__autonomy.decide(self.__auv_state, green, red, sensor_type='ANGLE').lower()
                 print(f"command_string: {command_str}")
 
-                if command_str != "":
+                self.__current_time = datetime.datetime.utcnow().timestamp()
+                if self.__current_time - self.__start_time > 60.0:
+                    hhmmss = datetime.datetime.fromtimestamp(self.__current_time).strftime('%H%M%S.%f')[:-4]
+                    cmd = f"BPRMB,{hhmmss},0,1,0,0,0,1"
+                    msg = f"${cmd}*{hex(BluefinMessages.checksum(cmd))[2:]}\r\n"
+                    self.send_message(msg)
+                elif command_str != "":
                     heading = 0.0
                     speed = 0.0
                     # This is the timestamp format from NMEA: hhmmss.ss
@@ -125,8 +131,6 @@ class BackSeat():
                             heading = float(args[1])
                         elif len(args) == 2 and args[0] == "thruster":
                             speed = int(args[1])
-                    self.current_time = datetime.datetime.utcnow().timestamp()
-                    hhmmss = datetime.datetime.fromtimestamp(self.current_time).strftime('%H%M%S.%f')[:-4]
                     cmd = f"BPRMB,{hhmmss},{heading},1,0,{speed},0,1"
                     msg = f"${cmd}*{hex(BluefinMessages.checksum(cmd))[2:]}\r\n"
                     self.send_message(msg)
