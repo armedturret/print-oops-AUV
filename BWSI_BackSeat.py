@@ -14,7 +14,7 @@ import threading
 import time
 import datetime
 import traceback
-
+import os
 import utm
 
 from Image_Processor import ImageProcessor
@@ -65,7 +65,10 @@ class BackSeat():
         self.__datum = None
         
         # set to PICAM for the real camera
-        self.__buoy_detector = ImageProcessor(camera='SIM')
+        if os.uname().nodename == 'auvpi':
+            self.__buoy_detector = ImageProcessor(camera='SIM')
+        else:
+            self.__buoy_detector = ImageProcessor(camera='PICAM')
         self.__logger = Logger(True)
         self.__autonomy = AUVController()
     
