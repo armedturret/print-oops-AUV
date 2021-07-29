@@ -194,7 +194,7 @@ class ImageProcessor():
                     self.__camera.resolution = (640, 480)
                     self.__camera.rotation = 180
                     self.__camera.framerate = 24
-                    time.sleep(2) # camera warmup time
+                    time.sleep(0.2) # camera warmup time
                     
                 image = self.__image.reshape((480, 640, 3))
         
